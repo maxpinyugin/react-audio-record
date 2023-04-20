@@ -11,6 +11,7 @@ const AudioRecorder = () => {
     const [audio, setAudio] = useState(null);
     const [audioMp3, setAudioMp3] = useState(null);
     const audioSource = useRef(null);
+    const [reverb, setReverb] = useState(true);
 
     let audioContext = useRef(null);
 
@@ -46,20 +47,23 @@ const AudioRecorder = () => {
         audioContext.current = new AudioContext();
         audioSource.current = audioContext.current.createMediaStreamSource(stream);
 
-        let tuna = new Tuna(audioContext.current);
+        if (reverb) {
+            let tuna = new Tuna(audioContext.current);
+            let effect = new tuna.Convolver({
+                highCut: 22050,                         //20 to 22050
+                lowCut: 20,                             //20 to 22050
+                dryLevel: 1,                            //0 to 1+
+                wetLevel: 1,                            //0 to 1+
+                level: 1,                               //0 to 1+, adjusts total output of both wet and dry
+                impulse: "../assets/impulses/impulse_rev.wav",    //the path to your impulse response
+                bypass: 0
+            });
 
-        let effect = new tuna.Convolver({
-            highCut: 22050,                         //20 to 22050
-            lowCut: 20,                             //20 to 22050
-            dryLevel: 1,                            //0 to 1+
-            wetLevel: 1,                            //0 to 1+
-            level: 1,                               //0 to 1+, adjusts total output of both wet and dry
-            impulse: "../assets/impulses/impulse_rev.wav",    //the path to your impulse response
-            bypass: 0
-        });
-
-        audioSource.current.connect(effect);
-        effect.connect(audioContext.current.destination);
+            audioSource.current.connect(effect);
+            effect.connect(audioContext.current.destination);
+        } else {
+            audioSource.current.connect(audioContext.current.destination);
+        }
 
         let localAudioChunks = [];
         mediaRecorder.current.ondataavailable = (event) => {
@@ -93,10 +97,19 @@ const AudioRecorder = () => {
         };
     };
 
+    const changeReverb = (val) => {
+        setReverb(val.target.checked);
+    }
+
     return (
         <div>
             <h2>Тест записи вокала</h2>
             <main>
+                <div className='mb-2'>
+                    <input type='checkbox' checked={reverb} onChange={changeReverb} id='add-reverb' />
+                    &nbsp;
+                    <label htmlFor='add-reverb'>Добавлять ревер</label>
+                </div>
                 <div className="audio-controls">
                     {!permission ? (
                         <button onClick={getMicrophonePermission} type="button" className="btn btn-primary">
