@@ -12,6 +12,7 @@ const AudioRecorder = () => {
     const [audioMp3, setAudioMp3] = useState(null);
     const audioSource = useRef(null);
     const [reverb, setReverb] = useState(true);
+    const [playback, setPlayback] = useState(true);
 
     let audioContext = useRef(null);
 
@@ -44,10 +45,12 @@ const AudioRecorder = () => {
         mediaRecorder.current.start();
 
 
-        audioContext.current = new AudioContext();
-        audioSource.current = audioContext.current.createMediaStreamSource(stream);
+        if (playback) {
+            audioContext.current = new AudioContext();
+            audioSource.current = audioContext.current.createMediaStreamSource(stream);
+        }
 
-        if (reverb) {
+        if (reverb && playback) {
             let tuna = new Tuna(audioContext.current);
             let effect = new tuna.Convolver({
                 highCut: 22050,                         //20 to 22050
@@ -61,7 +64,7 @@ const AudioRecorder = () => {
 
             audioSource.current.connect(effect);
             effect.connect(audioContext.current.destination);
-        } else {
+        } else if (playback) {
             audioSource.current.connect(audioContext.current.destination);
         }
 
@@ -92,8 +95,10 @@ const AudioRecorder = () => {
 
             setAudioChunks([]);
 
-            audioSource.current = null;
-            audioContext.current.close();
+            if (playback) {
+                audioSource.current = null;
+                audioContext.current.close();
+            }
         };
     };
 
@@ -101,14 +106,32 @@ const AudioRecorder = () => {
         setReverb(val.target.checked);
     }
 
+    const changePlayback = (val) => {
+        setPlayback(val.target.checked);
+        if (!val.target.checked) {
+            setReverb(false);
+        }
+    }
+
     return (
         <div>
             <h2>Тест записи вокала</h2>
             <main>
                 <div className='mb-2'>
-                    <input type='checkbox' checked={reverb} onChange={changeReverb} id='add-reverb' />
-                    &nbsp;
-                    <label htmlFor='add-reverb'>Добавлять ревер</label>
+                    <div className="form-check form-switch">
+                        <input checked={playback} onChange={changePlayback} className="form-check-input" type="checkbox" role="switch" id="add-playback" />
+                        <label className="form-check-label" htmlFor="add-playback">
+                            Воспроизводить realtime
+                        </label>
+                    </div>
+                </div>
+                <div className='mb-2'>
+                    <div className="form-check form-switch">
+                        <input checked={reverb} onChange={changeReverb} className="form-check-input" type="checkbox" role="switch" id="add-reverb" />
+                            <label className="form-check-label" htmlFor="add-reverb">
+                                Добавлять ревер
+                            </label>
+                    </div>
                 </div>
                 <div className="audio-controls">
                     {!permission ? (
