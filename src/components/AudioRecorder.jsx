@@ -30,7 +30,7 @@ const AudioRecorder = () => {
                     setPermission(true);
                     setStream(stream);
                 }).catch(function (error) {
-                    alert(error);
+                    alert(error.message);
                 });
 
             } catch (err) {
