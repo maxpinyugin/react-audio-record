@@ -9,7 +9,6 @@ const AudioRecorder = () => {
     const [stream, setStream] = useState(null);
     const [audioChunks, setAudioChunks] = useState([]);
     const [audio, setAudio] = useState(null);
-    const [audioMp3, setAudioMp3] = useState(null);
     const audioSource = useRef(null);
     const [reverb, setReverb] = useState(false);
     const [playback, setPlayback] = useState(true);
@@ -19,7 +18,7 @@ const AudioRecorder = () => {
     const getMicrophonePermission = async () => {
         if ("MediaRecorder" in window) {
             try {
-                const streamData = await navigator.mediaDevices.getUserMedia({
+                navigator.mediaDevices.getUserMedia({
                     audio: {
                         echoCancellation: false,
                         autoGainControl: false,
@@ -27,9 +26,13 @@ const AudioRecorder = () => {
                         latency: {exact: 0.003}
                     },
                     video: false,
+                }).then(function (stream) {
+                    setPermission(true);
+                    setStream(stream);
+                }).catch(function (error) {
+                    alert(error);
                 });
-                setPermission(true);
-                setStream(streamData);
+
             } catch (err) {
                 alert(err.message);
             }
@@ -38,7 +41,7 @@ const AudioRecorder = () => {
         }
     };
 
-    const playMetronome = (i = 0) => {
+    /*const playMetronome = (i = 0) => {
         if (i > 4) {
             return
         }
@@ -54,7 +57,7 @@ const AudioRecorder = () => {
         setTimeout(() => {
             playMetronome(i + 1)
         }, 500)
-    }
+    }*/
 
     const startRecording = async () => {
         setRecordingStatus("recording");
