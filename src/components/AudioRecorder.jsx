@@ -11,7 +11,7 @@ const AudioRecorder = () => {
     const [audio, setAudio] = useState(null);
     const [audioMp3, setAudioMp3] = useState(null);
     const audioSource = useRef(null);
-    const [reverb, setReverb] = useState(true);
+    const [reverb, setReverb] = useState(false);
     const [playback, setPlayback] = useState(true);
 
     let audioContext = useRef(null);
@@ -20,7 +20,12 @@ const AudioRecorder = () => {
         if ("MediaRecorder" in window) {
             try {
                 const streamData = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
+                    audio: {
+                        echoCancellation: false,
+                        autoGainControl: false,
+                        noiseSuppression: false,
+                        latency: {exact: 0.003}
+                    },
                     video: false,
                 });
                 setPermission(true);
@@ -32,6 +37,24 @@ const AudioRecorder = () => {
             alert("The MediaRecorder API is not supported in your browser.");
         }
     };
+
+    const playMetronome = (i = 0) => {
+        if (i > 4) {
+            return
+        }
+
+        const osc = new OscillatorNode(audioSource.current, {
+            frequency: 440,
+            type: 'sine',
+        })
+        osc.connect(audioSource.current.destination)
+        osc.start()
+        osc.stop(audioSource.current.currentTime + 0.1)
+
+        setTimeout(() => {
+            playMetronome(i + 1)
+        }, 500)
+    }
 
     const startRecording = async () => {
         setRecordingStatus("recording");
@@ -46,8 +69,10 @@ const AudioRecorder = () => {
 
 
         if (playback) {
-            audioContext.current = new AudioContext();
+            audioContext.current = new AudioContext({latencyHint: 0});
             audioSource.current = audioContext.current.createMediaStreamSource(stream);
+
+            //playMetronome();
         }
 
         if (reverb && playback) {
