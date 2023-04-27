@@ -23,7 +23,7 @@ const AudioRecorder = () => {
                         echoCancellation: false,
                         autoGainControl: false,
                         noiseSuppression: false,
-                        latency: {exact: 0.003}
+                        latency: 0.003
                     },
                     video: false,
                 }).then(function (stream) {
