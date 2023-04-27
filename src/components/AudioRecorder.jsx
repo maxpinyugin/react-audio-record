@@ -19,8 +19,6 @@ const AudioRecorder = () => {
     const getMicrophonePermission = async () => {
         if ("MediaRecorder" in window) {
             try {
-                navigator.mediaDevices.getUserMedia = navigator.mediaDevices.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
-
                 const streamData = await navigator.mediaDevices.getUserMedia({
                     audio: {
                         echoCancellation: false,
