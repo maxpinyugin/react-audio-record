@@ -21,8 +21,8 @@ const AudioRecorder = () => {
                 navigator.mediaDevices.getUserMedia({
                     audio: {
                         echoCancellation: false,
-                        autoGainControl: false,
-                        noiseSuppression: false,
+                        autoGainControl: true,
+                        noiseSuppression: true,
                         latency: 0.003
                     },
                     video: false,
