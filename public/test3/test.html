@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+<meta http-equiv="Pragma" content="no-cache" />
+<meta http-equiv="Expires" content="0" />
+
+<head>
+    <title>Host that loads a plugin with its GUI</title>
+    <script
+            src="https://mainline.i3s.unice.fr/WebAudioPluginBank/bower_components/webaudio-controls2/webcomponents-lite.js">
+    </script>
+</head>
+<body>
+Test
+</body>
+<script type="module">
+
+    import DSP from "./main.js";
+
+    var ctx = new AudioContext();
+    var audioSource;
+    var mediaStream;
+
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false } })
+            .then(function (stream) {
+                mediaStream = stream
+
+                audioSource = ctx.createMediaStreamSource(mediaStream);
+
+
+                var mediaSource = ctx.createMediaStreamSource(mediaStream);
+                var pluginURL = ".";
+                var plugin = new DSP(ctx, pluginURL);
+
+                plugin.load().then((node) => {
+                    plugin.loadGui().then((elem) => {
+                        document.body.appendChild(elem);
+
+                    });
+                    console.log(node.getDescriptor());
+                    mediaSource.connect(node);
+                    node.connect(ctx.destination);
+
+                    console.log(audioSource);
+
+                    audioSource.connect(node);
+                });
+
+            })
+            .catch((e) => {
+                alert('Error getting audio input');
+                console.log(e);
+            });
+    } else {
+        alert('Audio input API not available');
+    }
+
+
+
+
+
+</script>
+
+</html>
