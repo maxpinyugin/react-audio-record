@@ -81,9 +81,26 @@ export default function AudioRecorderWasm()
                 document.body.appendChild(elem);
 
             });
+
+            /*node.output_handler = function (data, data2) {
+                console.log(data);
+                console.log(data2);
+            };
+
+            node.ondataavailable = (event) => {
+                if (typeof event.data === "undefined") return;
+                if (event.data.size === 0) return;
+                setAudioChunks([audioChunks, ...event.data])
+                console.log(event.data);
+            }*/
+            /*node.handleMessage(function (event) {
+                console.log(event);
+            });*/
+
             node.connect(audioContext.current.destination);
             audioSource.current.connect(node);
         });
+
 
         /*
 
