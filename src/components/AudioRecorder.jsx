@@ -3,18 +3,17 @@ import Tuna from 'tunajs';
 
 const AudioRecorder = () => {
     const mimeType = "audio/webm";
+    const [permission, setPermission] = useState(false);
+    const mediaRecorder = useRef(null);
     const [recordingStatus, setRecordingStatus] = useState("inactive");
+    const [stream, setStream] = useState(null);
+    const [audioChunks, setAudioChunks] = useState([]);
     const [audio, setAudio] = useState(null);
+    const audioSource = useRef(null);
     const [reverb, setReverb] = useState(false);
     const [playback, setPlayback] = useState(true);
-    const [audioChunks, setAudioChunks] = useState([]);
-    const [micPermission, setMicPermission] = useState(false);
-    const [mediaStream, setMediaStream] = useState(null);
 
-    let audioContext;
-    let recorderNode;
-    let mediaRecorder;
-    let audioSource;
+    let audioContext = useRef(null);
 
     const getMicrophonePermission = async () => {
         if ("MediaRecorder" in window) {
@@ -28,8 +27,8 @@ const AudioRecorder = () => {
                     },
                     video: false,
                 }).then(function (stream) {
-                    setMicPermission(true);
-                    setMediaStream(stream);
+                    setPermission(true);
+                    setStream(stream);
                 }).catch(function (error) {
                     alert(error);
                 });
@@ -42,59 +41,93 @@ const AudioRecorder = () => {
         }
     };
 
+    /*const playMetronome = (i = 0) => {
+        if (i > 4) {
+            return
+        }
+
+        const osc = new OscillatorNode(audioSource.current, {
+            frequency: 440,
+            type: 'sine',
+        })
+        osc.connect(audioSource.current.destination)
+        osc.start()
+        osc.stop(audioSource.current.currentTime + 0.1)
+
+        setTimeout(() => {
+            playMetronome(i + 1)
+        }, 500)
+    }*/
 
     const startRecording = async () => {
         setRecordingStatus("recording");
+        //create new Media recorder instance using the stream
+        const media = new MediaRecorder(stream, { type: mimeType });
 
-        mediaRecorder = new MediaRecorder(mediaStream, { type: mimeType });
-        audioContext = new AudioContext();
-        await audioContext.audioWorklet.addModule('./worklets/recorderWorkletProcessor.js')
 
-        recorderNode = new window.AudioWorkletNode(audioContext,
-            'recorder-worklet',
-            {parameterData: {numberOfChannels: 2}});
+        //set the MediaRecorder instance to the mediaRecorder ref
+        mediaRecorder.current = media;
+        //invokes the start method to start the recording process
+        mediaRecorder.current.start();
 
-        audioSource = audioContext.createMediaStreamSource(mediaStream);
-        audioSource.connect(recorderNode);
-        recorderNode.connect(audioContext.destination);
+
+        if (playback) {
+            audioContext.current = new AudioContext({latencyHint: 0});
+            audioSource.current = audioContext.current.createMediaStreamSource(stream);
+
+            //playMetronome();
+        }
+
+        if (reverb && playback) {
+            let tuna = new Tuna(audioContext.current);
+            let effect = new tuna.Convolver({
+                highCut: 22050,                         //20 to 22050
+                lowCut: 20,                             //20 to 22050
+                dryLevel: 1,                            //0 to 1+
+                wetLevel: 1,                            //0 to 1+
+                level: 1,                               //0 to 1+, adjusts total output of both wet and dry
+                impulse: "../assets/impulses/impulse_rev.wav",    //the path to your impulse response
+                bypass: 0
+            });
+
+            audioSource.current.connect(effect);
+            effect.connect(audioContext.current.destination);
+        } else if (playback) {
+            audioSource.current.connect(audioContext.current.destination);
+        }
 
         let localAudioChunks = [];
-        recorderNode.port.onmessage = (e) => {
-            const data = e.data;
-            switch(data.eventType) {
-                case "data":
-                    // process pcm data; encode etc
-                    const audioData = data.audioBuffer;
-                    const bufferSize = data.bufferSize;
-
-
-                    console.log(audioData);
-
-                    localAudioChunks.push(audioData);
-
-                    break;
-                case "stop":
-                    // recording has stopped
-                    break;
-            }
+        mediaRecorder.current.ondataavailable = (event) => {
+            if (typeof event.data === "undefined") return;
+            if (event.data.size === 0) return;
+            localAudioChunks.push(event.data);
         };
-
-        console.log(localAudioChunks);
-
         setAudioChunks(localAudioChunks);
-
-        let isRecording = recorderNode.parameters.get('isRecording')
-        isRecording.setValueAtTime(1, audioContext.currentTime);
-
-        //audioSource.connect(audioContext.destination);
     };
 
     const stopRecording = () => {
         setRecordingStatus("inactive");
 
-        let isRecording = recorderNode.parameters.get('isRecording')
-        isRecording.setValueAtTime(0, audioContext.currentTime);
+        //stops the recording instance
+        mediaRecorder.current.stop();
 
+        mediaRecorder.current.onstop = async () => {
+            //creates a blob file from the audiochunks data
+
+            const audioBlob = new Blob(audioChunks, { type: mimeType });
+            console.log(audioBlob);
+
+            //creates a playable URL from the blob file.
+            const audioUrl = URL.createObjectURL(audioBlob);
+            setAudio(audioUrl);
+
+            setAudioChunks([]);
+
+            if (playback) {
+                audioSource.current = null;
+                audioContext.current.close();
+            }
+        };
     };
 
     const changeReverb = (val) => {
@@ -129,12 +162,12 @@ const AudioRecorder = () => {
                     </div>
                 </div>
                 <div className="audio-controls">
-                    {!micPermission ? (
+                    {!permission ? (
                         <button onClick={getMicrophonePermission} type="button" className="btn btn-primary">
                             Подключить микрофон
                         </button>
                     ) : null}
-                    {micPermission && recordingStatus === "inactive" ? (
+                    {permission && recordingStatus === "inactive" ? (
                         <button onClick={startRecording} type="button" className="btn btn-success">
                             Начать запись
                         </button>

@@ -13,48 +13,6 @@
 <body>
 Test
 </body>
-<script type="text/javascript">
-    function listDevices(callback) {
-        var devices = navigator.mediaDevices;
-        if (devices && 'enumerateDevices' in devices) {
-            var promise = devices.enumerateDevices();
-            promise
-                .then(function(devices) {
-                    var video = [];
-                    var audio = [];
-                    for (var i = 0; i < devices.length; ++i) {
-                        var device = devices[i];
-                        switch (device.kind) {
-                            case 'videoinput': video.push(device); break;
-                            case 'audioinput': audio.push(device); break;
-                        }
-                    };
-                    var devices = {
-                        video: video,
-                        audio: audio
-                    };
-                    callback(null, devices);
-                })
-                .catch(function(error) {
-                    callback(`${error.name}: ${error.message}`, null);
-                });
-        } else {
-            callback(`Media Devices API is not supported.`, null);
-        }
-    }
-
-    listDevices(function(error, devices) {
-        if (error) {
-            console.error(error);
-        } else {
-            var video = devices.video;  // input video devices as array (e.g. web cameras)
-            var audio = devices.audio;  // input audio devices as array (e.g. microphones)
-            console.log('video: ' + JSON.stringify(video, null, 4));
-            console.log('audio: ' + JSON.stringify(audio, null, 4));
-        }
-    });
-</script>
-
 <script type="module">
 
     import DSP from "./main.js";
@@ -64,15 +22,7 @@ Test
     var mediaStream;
 
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-
-
-
-        navigator.mediaDevices.getUserMedia({
-            audio: {
-                echoCancellation: false,
-                deviceId: "default"
-            }
-        })
+        navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false } })
             .then(function (stream) {
                 mediaStream = stream
 
