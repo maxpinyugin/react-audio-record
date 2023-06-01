@@ -143,50 +143,52 @@ const AudioRecorder = () => {
 
     return (
         <div>
-            <h2>Тест записи вокала</h2>
+            <h2>Тест записи вокала (native)</h2>
             <main>
-                <div className='mb-2'>
-                    <div className="form-check form-switch">
-                        <input checked={playback} onChange={changePlayback} className="form-check-input" type="checkbox" role="switch" id="add-playback" />
-                        <label className="form-check-label" htmlFor="add-playback">
-                            Воспроизводить realtime
-                        </label>
-                    </div>
-                </div>
-                <div className='mb-2'>
-                    <div className="form-check form-switch">
-                        <input checked={reverb} onChange={changeReverb} className="form-check-input" type="checkbox" role="switch" id="add-reverb" />
-                            <label className="form-check-label" htmlFor="add-reverb">
-                                Добавлять ревер
+                <div className="card" style={{maxWidth: 500, padding: 20, margin: 10}}>
+                    <div className='mb-2'>
+                        <div className="form-check form-switch">
+                            <input checked={playback} onChange={changePlayback} className="form-check-input" type="checkbox" role="switch" id="add-playback" />
+                            <label className="form-check-label" htmlFor="add-playback">
+                                Воспроизводить realtime
                             </label>
+                        </div>
                     </div>
-                </div>
-                <div className="audio-controls">
-                    {!permission ? (
-                        <button onClick={getMicrophonePermission} type="button" className="btn btn-primary">
-                            Подключить микрофон
-                        </button>
-                    ) : null}
-                    {permission && recordingStatus === "inactive" ? (
-                        <button onClick={startRecording} type="button" className="btn btn-success">
-                            Начать запись
-                        </button>
-                    ) : null}
-                    {recordingStatus === "recording" ? (
-                        <button onClick={stopRecording} type="button" className="btn btn-danger">
-                            Остановить запись
-                        </button>
-                    ) : null}
-                </div>
-                {audio ? (
-                    <div className="audio-container">
-                        <audio src={audio} controls></audio>
-                        <br />
-                        <a download href={audio} className="link link-success">
-                            Скачать файл
-                        </a>
+                    <div className='mb-2'>
+                        <div className="form-check form-switch">
+                            <input checked={reverb} onChange={changeReverb} className="form-check-input" type="checkbox" role="switch" id="add-reverb" />
+                                <label className="form-check-label" htmlFor="add-reverb">
+                                    Добавлять ревер
+                                </label>
+                        </div>
                     </div>
-                ) : null}
+                    <div className="audio-controls">
+                        {!permission ? (
+                            <button onClick={getMicrophonePermission} type="button" className="btn btn-primary">
+                                Подключить микрофон
+                            </button>
+                        ) : null}
+                        {permission && recordingStatus === "inactive" ? (
+                            <button onClick={startRecording} type="button" className="btn btn-success">
+                                Начать запись
+                            </button>
+                        ) : null}
+                        {recordingStatus === "recording" ? (
+                            <button onClick={stopRecording} type="button" className="btn btn-danger">
+                                Остановить запись
+                            </button>
+                        ) : null}
+                    </div>
+                    {audio ? (
+                        <div className="audio-container">
+                            <audio src={audio} controls></audio>
+                            <br />
+                            <a download href={audio} className="link link-success">
+                                Скачать файл
+                            </a>
+                        </div>
+                    ) : null}
+                </div>
             </main>
         </div>
     );

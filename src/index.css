@@ -12,6 +12,10 @@ code {
     monospace;
 }
 
+.wrapper {
+  padding: 20px;
+}
+
 
 .button-flex {
   display: flex;

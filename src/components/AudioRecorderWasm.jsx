@@ -77,90 +77,53 @@ export default function AudioRecorderWasm()
         let plugin = new DSP(audioContext.current, pluginURL);
 
         plugin.load().then((node) => {
-            plugin.loadGui().then((elem) => {
+            /*plugin.loadGui().then((elem) => {
                 document.body.appendChild(elem);
 
-            });
+            });*/
 
             /*node.output_handler = function (data, data2) {
                 console.log(data);
                 console.log(data2);
-            };
+            };*/
 
-            node.ondataavailable = (event) => {
+            /*node.ondataavailable = (event) => {
                 if (typeof event.data === "undefined") return;
                 if (event.data.size === 0) return;
                 setAudioChunks([audioChunks, ...event.data])
                 console.log(event.data);
             }*/
+
             /*node.handleMessage(function (event) {
                 console.log(event);
             });*/
 
+            node.port.onmessage = (e) => {
+                console.log(e)
+                alert('DATA !!!')
+
+                if (e.data.eventType === 'data') {
+                    const audioData = e.data.audioBuffer;
+                    // process pcm data
+                    console.log(audioData)
+                }
+                if (e.data.eventType === 'stop') {
+                    // recording has stopped
+                }
+            };
+
+            console.log('DATA:')
+            console.log(node)
+
             node.connect(audioContext.current.destination);
             audioSource.current.connect(node);
         });
-
-
-        /*
-
-
-
-
-
-        //create new Media recorder instance using the stream
-        const media = new MediaRecorder(stream, { type: mimeType });
-
-        //set the MediaRecorder instance to the mediaRecorder ref
-        mediaRecorder.current = media;
-        //invokes the start method to start the recording process
-        mediaRecorder.current.start();
-
-
-        if (playback) {
-            audioContext.current = new AudioContext({latencyHint: 0});
-            audioSource.current = audioContext.current.createMediaStreamSource(stream);
-        }
-
-        if (playback) {
-            audioSource.current.connect(audioContext.current.destination);
-        }
-
-        let localAudioChunks = [];
-        mediaRecorder.current.ondataavailable = (event) => {
-            if (typeof event.data === "undefined") return;
-            if (event.data.size === 0) return;
-            localAudioChunks.push(event.data);
-        };
-        setAudioChunks(localAudioChunks);*/
     };
 
     const stopRecording = () => {
         setRecordingStatus("inactive");
 
         audioSource.current.disconnect();
-
-        //stops the recording instance
-        /*mediaRecorder.current.stop();
-
-        mediaRecorder.current.onstop = async () => {
-            //creates a blob file from the audiochunks data
-
-            const audioBlob = new Blob(audioChunks, { type: mimeType });
-            console.log(audioBlob);
-
-            //creates a playable URL from the blob file.
-            const audioUrl = URL.createObjectURL(audioBlob);
-            setAudio(audioUrl);
-
-            setAudioChunks([]);
-
-            if (playback) {
-                audioSource.current = null;
-                audioContext.current.close();
-            }
-        };*/
-
     };
 
     const changeReverb = (val) => {
@@ -181,7 +144,7 @@ export default function AudioRecorderWasm()
 
     return (
         <div>
-            <h2>Тест записи вокала</h2>
+            <h2>Тест записи вокала (wasm)</h2>
             <main>
                 <div className="card" style={{maxWidth: 500, padding: 20, margin: 10}}>
                     <div className='mb-2'>
