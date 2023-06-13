@@ -1,8 +1,218 @@
-import { useState, useRef } from "react";
+import React, {useState, useRef, useEffect} from "react";
 import Tuna from 'tunajs';
 
 const AudioRecorder = () => {
     const mimeType = "audio/webm";
+
+    const impulses = [
+        {
+            name: 'Basic Reverb',
+            file: 'impulse_rev.wav'
+        },
+
+        {
+            name: 'Reverb Short',
+            file: 'ir_rev_short.wav'
+        },
+
+        {
+            name: 'Block Inside',
+            file: 'Block_Inside.wav'
+        },
+
+        {
+            name: 'Bottle Hall',
+            file: 'Bottle_Hall.wav'
+        },
+
+        {
+            name: 'Cement Blocks 1',
+            file: 'Cement_Blocks_1.wav'
+        },
+
+        {
+            name: 'Cement Blocks 2',
+            file: 'Cement_Blocks_2.wav'
+        },
+
+        {
+            name: 'Chateau de Logne Outside',
+            file: 'Chateau_de_Logne_Outside.wav'
+        },
+
+        {
+            name: 'Conic Long Echo Hall',
+            file: 'Conic_Long_Echo_Hall.wav'
+        },
+
+        {
+            name: 'Deep Space',
+            file: 'Deep_Space.wav'
+        },
+
+        {
+            name: 'Derlon Sanctuary',
+            file: 'Derlon_Sanctuary.wav'
+        },
+
+        {
+            name: 'Direct Cabinet N1',
+            file: 'Direct_Cabinet_N1.wav'
+        },
+
+        {
+            name: 'Direct Cabinet N2',
+            file: 'Direct_Cabinet_N2.wav'
+        },
+
+        {
+            name: 'Direct Cabinet N3',
+            file: 'Direct_Cabinet_N3.wav'
+        },
+
+        {
+            name: 'Direct Cabinet N4',
+            file: 'Direct_Cabinet_N4.wav'
+        },
+
+        {
+            name: 'Five Columns',
+            file: 'Five_Columns.wav'
+        },
+
+        {
+            name: 'Five Columns Long',
+            file: 'Five_Columns_Long.wav'
+        },
+
+        {
+            name: 'French 18th Century Salon',
+            file: 'French_18th_Century_Salon.wav'
+        },
+
+        {
+            name: 'Going Home',
+            file: 'Going_Home.wav'
+        },
+
+        {
+            name: 'Greek 7 Echo Hall',
+            file: 'Greek_7_Echo_Hall.wav'
+        },
+
+        {
+            name: 'Highly Damped Large Room',
+            file: 'Highly_Damped_Large_Room.wav'
+        },
+
+        {
+            name: 'In The Silo',
+            file: 'In_The_Silo.wav'
+        },
+
+        {
+            name: 'In The Silo Revised',
+            file: 'In_The_Silo_Revised.wav'
+        },
+
+        {
+            name: 'Large Bottle Hall',
+            file: 'Large_Bottle_Hall.wav'
+        },
+
+        {
+            name: 'Large Long Echo Hall',
+            file: 'Large_Long_Echo_Hall.wav'
+        },
+
+        {
+            name: 'Large Wide Echo Hall',
+            file: 'Large_Wide_Echo_Hall.wav'
+        },
+
+        {
+            name: 'Masonic Lodge',
+            file: 'Masonic_Lodge.wav'
+        },
+
+        {
+            name: 'Musikvereinsaal',
+            file: 'Musikvereinsaal.wav'
+        },
+
+        {
+            name: 'Narrow Bumpy Space',
+            file: 'Narrow_Bumpy_Space.wav'
+        },
+
+        {
+            name: 'Nice Drum Room',
+            file: 'Nice_Drum_Room.wav'
+        },
+
+        {
+            name: 'On a Star',
+            file: 'On_a_Star.wav'
+        },
+
+        {
+            name: 'Parking Garage',
+            file: 'Parking_Garage.wav'
+        },
+
+        {
+            name: 'Rays',
+            file: 'Rays.wav'
+        },
+
+        {
+            name: 'Right Glass Triangle',
+            file: 'Right_Glass_Triangle.wav'
+        },
+
+        {
+            name: 'Ruby Room',
+            file: 'Ruby_Room.wav'
+        },
+
+        {
+            name: 'Scala Milan Opera Hall',
+            file: 'Scala_Milan_Opera_Hall.wav'
+        },
+
+        {
+            name: 'Small Drum Room',
+            file: 'Small_Drum_Room.wav'
+        },
+
+        {
+            name: 'Small Prehistoric Cave',
+            file: 'Small_Prehistoric_Cave.wav'
+        },
+
+        {
+            name: 'St Nicolaes Church',
+            file: 'St_Nicolaes_Church.wav'
+        },
+
+        {
+            name: 'Sweetspot1M',
+            file: 'Sweetspot1M.wav'
+        },
+
+        {
+            name: 'Trig Room',
+            file: 'Trig_Room.wav'
+        },
+
+        {
+            name: 'Vocal Duo',
+            file: 'Vocal_Duo.wav'
+        }
+    ];
+
+    const [selectedImpulse, setSelectedImpulse] = useState(impulses[0]['file'])
+
     const [permission, setPermission] = useState(false);
     const mediaRecorder = useRef(null);
     const [recordingStatus, setRecordingStatus] = useState("inactive");
@@ -13,7 +223,29 @@ const AudioRecorder = () => {
     const [reverb, setReverb] = useState(false);
     const [playback, setPlayback] = useState(true);
 
+    const [inputDevices, setInputDevices] = useState([]);
+    const [selectedDevice, setSelectedDevice] = useState("default");
+
     let audioContext = useRef(null);
+
+    useEffect(() => {
+        let devices = navigator.mediaDevices;
+        if (devices && 'enumerateDevices' in devices) {
+            let promise = devices.enumerateDevices();
+            promise
+                .then(function(devices) {
+                    var audio = [];
+                    for (let i = 0; i < devices.length; ++i) {
+                        let device = devices[i];
+                        switch (device.kind) {
+                            case 'audioinput': audio.push(device); break;
+                        }
+                    }
+
+                    setInputDevices(audio);
+                });
+        }
+    }, [inputDevices]);
 
     const getMicrophonePermission = async () => {
         if ("MediaRecorder" in window) {
@@ -23,7 +255,8 @@ const AudioRecorder = () => {
                         echoCancellation: false,
                         autoGainControl: true,
                         noiseSuppression: true,
-                        latency: 0.003
+                        latency: 0.003,
+                        deviceId: selectedDevice
                     },
                     video: false,
                 }).then(function (stream) {
@@ -86,7 +319,7 @@ const AudioRecorder = () => {
                 dryLevel: 1,                            //0 to 1+
                 wetLevel: 1,                            //0 to 1+
                 level: 1,                               //0 to 1+, adjusts total output of both wet and dry
-                impulse: "../assets/impulses/impulse_rev.wav",    //the path to your impulse response
+                impulse: "../assets/impulses/" + selectedImpulse,    //the path to your impulse response
                 bypass: 0
             });
 
@@ -141,11 +374,34 @@ const AudioRecorder = () => {
         }
     }
 
+    const changeAudioDevice = (e) => {
+        setSelectedDevice(e.target.value)
+        setPermission(false)
+    }
+
+    const changeImpulse = (e) => {
+        setSelectedImpulse(e.target.value)
+    }
+
     return (
         <div>
             <h2>Тест записи вокала (native)</h2>
             <main>
                 <div className="card" style={{maxWidth: 500, padding: 20, margin: 10}}>
+                    <div className='mb-2'>
+                        <div className="form-group">
+                            <label>
+                                Устройство записи
+                            </label>
+                            <select className="form-select" onChange={changeAudioDevice}>
+                                {inputDevices.map((device, index) => {
+                                    return (
+                                        <option key={index} value={device.deviceId}>{device.label}</option>
+                                    )
+                                })}
+                            </select>
+                        </div>
+                    </div>
                     <div className='mb-2'>
                         <div className="form-check form-switch">
                             <input checked={playback} onChange={changePlayback} className="form-check-input" type="checkbox" role="switch" id="add-playback" />
@@ -162,6 +418,24 @@ const AudioRecorder = () => {
                                 </label>
                         </div>
                     </div>
+
+                    {reverb && (
+                        <div className='mb-2'>
+                            <div className="form-group">
+                                <label>
+                                    Выберите ревер
+                                </label>
+                                <select className="form-select" onChange={changeImpulse}>
+                                    {impulses.map((item, index) => {
+                                        return (
+                                            <option selected={selectedImpulse === item.file} key={index} value={item.file}>{item.name}</option>
+                                        )
+                                    })}
+                                </select>
+                            </div>
+                        </div>
+                    )}
+
                     <div className="audio-controls">
                         {!permission ? (
                             <button onClick={getMicrophonePermission} type="button" className="btn btn-primary">
